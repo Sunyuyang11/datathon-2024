@@ -1,0 +1,247 @@
+---
+title: "health_analysis"
+output: html_document
+date: "2024-05-18"
+---
+```{r}
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+```{r}
+# load in data
+drug <- read_csv("Drug_overdose_death_rates__by_drug_type__sex__age__race__and_Hispanic_origin__United_States_20240518.csv")
+```
+
+
+# first question
+# by year trend
+
+```{r}
+drug %>% filter(PANEL_NUM == 2)
+```
+
+
+```{r}
+# Convert necessary columns to appropriate types and handle NA values
+drug <- drug %>%
+  mutate(
+    YEAR = as.numeric(YEAR),
+    PANEL = as.factor(PANEL),
+    ESTIMATE = as.numeric(ESTIMATE)
+  ) %>%
+  filter(!is.na(ESTIMATE))  # Remove rows with missing death rates
+
+# Create a new column that combines PANEL_NUM and a simplified PANEL description
+drug <- drug %>%
+  mutate(
+    PANEL_COMBINED = case_when(
+      PANEL_NUM == 0 ~ "All drug overdose deaths",
+      PANEL_NUM == 1 ~ "Any opioid",
+      PANEL_NUM == 2 ~ "Natural and semisynthetic opioids",
+      PANEL_NUM == 3 ~ "Methadone",
+      PANEL_NUM == 4 ~ "Other synthetic opioids",
+      PANEL_NUM == 5 ~ "Heroin"
+    )
+  )
+
+# Group by YEAR and PANEL_COMBINED, and calculate mean ESTIMATE
+drug_summary <- drug %>%
+  group_by(YEAR, PANEL_COMBINED) %>%
+  summarise(mean_estimate = mean(ESTIMATE, na.rm = TRUE))
+
+ggplot(drug_summary, aes(x = YEAR, y = mean_estimate, color = PANEL_COMBINED)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  labs(
+    title = "Trends in Drug Overdose Death Rates Over Time by Drug Overdose Type",
+    x = "Year",
+    y = "Mean Death Rate per 100,000 Resident Population",
+    color = "Drug Overdose Type"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+
+```
+```{r}
+# plot by sex
+# Extract Sex information
+drug <- drug %>%
+  mutate(Sex = case_when(
+    grepl("Male", STUB_LABEL) ~ "Male",
+    grepl("Female", STUB_LABEL) ~ "Female",
+    TRUE ~ "All"
+  ))
+
+# Group by YEAR, Sex, and PANEL_COMBINED, and calculate mean ESTIMATE
+drug_summary_sex <- drug %>%
+  group_by(YEAR, Sex, PANEL_COMBINED) %>%
+  summarise(mean_estimate = mean(ESTIMATE, na.rm = TRUE))
+
+ggplot(drug_summary_sex, aes(x = YEAR, y = mean_estimate, color = PANEL_COMBINED)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  facet_wrap(~ Sex) +
+  labs(
+    title = "Trends in Drug Overdose Death Rates Over Time by Sex",
+    x = "Year",
+    y = "Mean Death Rate per 100,000 Resident Population",
+    color = "Drug Overdose Type"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+
+```
+
+```{r}
+# Extract Race information
+drug <- drug %>%
+  mutate(Race = case_when(
+    grepl("White", STUB_LABEL) ~ "White",
+    grepl("Black or African American", STUB_LABEL) ~ "Black or African American",
+    grepl("American Indian or Alaska Native", STUB_LABEL) ~ "American Indian or Alaska Native",
+    grepl("Asian", STUB_LABEL) ~ "Asian",
+    grepl("Native Hawaiian or Other Pacific Islander", STUB_LABEL) ~ "Native Hawaiian or Other Pacific Islander",
+    grepl("Hispanic or Latino", STUB_LABEL) ~ "Hispanic or Latino",
+    grepl("Not Hispanic or Latino", STUB_LABEL) ~ "Not Hispanic or Latino",
+    TRUE ~ "All Races"
+  ))
+
+# Group by YEAR, Race, and PANEL_COMBINED, and calculate mean ESTIMATE
+drug_summary_race <- drug %>%
+  group_by(YEAR, Race, PANEL_COMBINED) %>%
+  summarise(mean_estimate = mean(ESTIMATE, na.rm = TRUE))
+
+ggplot(drug_summary_race, aes(x = YEAR, y = mean_estimate, color = PANEL_COMBINED)) +
+  geom_line(size = 0.5) +
+  geom_point(size = 0.5) +
+  facet_wrap(~ Race) +
+  labs(
+    title = "Trends in Drug Overdose Death Rates Over Time by Race",
+    x = "Year",
+    y = "Mean Death Rate per 100,000 Resident Population",
+    color = "Drug Overdose Type"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+```
+```{r}
+# Extract Age information
+drug <- drug %>%
+  mutate(Age = case_when(
+    grepl("Under 15 years", STUB_LABEL) ~ "Under 15 years",
+    grepl("15-24 years", STUB_LABEL) ~ "15-24 years",
+    grepl("25-34 years", STUB_LABEL) ~ "25-34 years",
+    grepl("35-44 years", STUB_LABEL) ~ "35-44 years",
+    grepl("45-54 years", STUB_LABEL) ~ "45-54 years",
+    grepl("55-64 years", STUB_LABEL) ~ "55-64 years",
+    grepl("65-74 years", STUB_LABEL) ~ "65-74 years",
+    grepl("75-84 years", STUB_LABEL) ~ "75-84 years",
+    grepl("85 years and over", STUB_LABEL) ~ "85 years and over",
+    TRUE ~ "All Ages"
+  ))
+
+# Group by YEAR, Age, and PANEL_COMBINED, and calculate mean ESTIMATE
+drug_summary_age <- drug %>%
+  group_by(YEAR, Age, PANEL_COMBINED) %>%
+  summarise(mean_estimate = mean(ESTIMATE, na.rm = TRUE))
+
+ggplot(drug_summary_age, aes(x = YEAR, y = mean_estimate, color = PANEL_COMBINED)) +
+  geom_line(size = 0.5) +
+  geom_point(size = 0.5) +
+  facet_wrap(~ Age) +
+  labs(
+    title = "Trends in Drug Overdose Death Rates Over Time by Age Group",
+    x = "Year",
+    y = "Mean Death Rate per 100,000 Resident Population",
+    color = "Drug Overdose Type"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+
+```
+## correlation
+
+```{r}
+# Check for NA or Inf values in ESTIMATE
+sum(is.na(drug$ESTIMATE))  # Count of NA values
+sum(is.infinite(drug$ESTIMATE))  # Count of Inf values
+
+# Remove rows with NA or Inf in ESTIMATE
+drug <- drug %>% filter(!is.na(ESTIMATE) & !is.infinite(ESTIMATE))
+
+# Mutate the 'drug' dataframe to add the 'log_estimate' column
+drug <- drug %>% mutate(log_estimate = log(ESTIMATE))
+
+# Check for NA or Inf values in log_estimate
+sum(is.na(drug$log_estimate))  # Count of NA values
+sum(is.infinite(drug$log_estimate))  # Count of Inf values
+
+# Remove rows with NA or Inf in log_estimate
+drug <- drug %>% filter(!is.na(log_estimate) & !is.infinite(log_estimate))
+
+# Fit the linear model
+lm_model <- lm(log_estimate ~ YEAR + PANEL_COMBINED + Sex + Age + Race, data = drug)
+
+# Summary of the linear model to check the results
+summary(lm_model)
+
+```
+
+## combination of demographic
+```{r}
+sum(is.na(drug$ESTIMATE))  
+sum(is.infinite(drug$ESTIMATE))  
+
+drug <- drug %>% filter(!is.na(ESTIMATE) & !is.infinite(ESTIMATE))
+
+# Mutate the 'drug' dataframe to add the 'log_estimate' column
+drug <- drug %>% mutate(log_estimate = log(ESTIMATE))
+
+# Check for NA or Inf values in log_estimate
+sum(is.na(drug$log_estimate))  
+sum(is.infinite(drug$log_estimate))
+
+# Remove rows with NA or Inf in log_estimate
+drug <- drug %>% filter(!is.na(log_estimate) & !is.infinite(log_estimate))
+
+# Fit the linear model with interaction terms
+lm_model_interaction <- lm(log_estimate ~ YEAR + PANEL_COMBINED * Sex + PANEL_COMBINED * Age + Sex * Age, data = drug)
+
+# Summary of the linear model to check the results
+summary(lm_model_interaction)
+
+```
+
