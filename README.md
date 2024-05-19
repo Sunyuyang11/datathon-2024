@@ -12,3 +12,8 @@ Join us as we delve into the data and work towards reducing overdose deaths and 
 
 ## Github error on ipynb
 Copy the URL to https://nbviewer.org/ to see the page~!
+### Machine Learning:
+https://nbviewer.org/github/Sunyuyang11/datathon-2024/blob/main/Machine%20Learning/Health_Drug_Overdose_in_USA.ipynb
+
+### Data Analysis and Visualization
+https://nbviewer.org/github/Sunyuyang11/datathon-2024/blob/main/Visualization/Health_Drug_Overdose_in_USA%28Visualization%29.ipynb
